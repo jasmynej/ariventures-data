@@ -15,6 +15,7 @@ router.get('/', async function(req, res) {
 
 router.post("/load", async function (req, res) {
     try {
+        await pool.query("TRUNCATE TABLE countries RESTART IDENTITY CASCADE;");
         const countriesAPI = await axios.get("https://restcountries.com/v3.1/all");
         let objsToInsert = [];
 
@@ -59,4 +60,62 @@ router.post("/load", async function (req, res) {
     }
 });
 
+router.post("/load-visa-combinations", async function (req, res) {
+    try {
+        await pool.query("TRUNCATE TABLE visa_status RESTART IDENTITY CASCADE;");
+        // Fetch country IDs
+        const { rows } = await pool.query("SELECT id FROM countries");
+        const countryIds = rows.map(row => row.id);
+
+        let combinations = [];
+
+        // Generate all passport-country combinations
+        for (let i = 0; i < countryIds.length; i++) {
+            for (let j = 0; j < countryIds.length; j++) {
+                if (i !== j) {
+                    combinations.push([countryIds[i], countryIds[j]]);
+                }
+            }
+        }
+
+        console.log(`Generated ${combinations.length} combinations`);
+
+        // Batch insert using chunks (5000 rows per insert to avoid SQL limits)
+        const chunkSize = 5000;
+        for (let i = 0; i < combinations.length; i += chunkSize) {
+            const chunk = combinations.slice(i, i + chunkSize);
+            const values = chunk.flat(); // Flatten nested array
+            const placeholders = chunk
+                .map((_, index) => `($${index * 2 + 1}, $${index * 2 + 2})`)
+                .join(", ");
+
+            const insertQuery = `INSERT INTO visa_status (passport, destination) VALUES ${placeholders}`;
+
+            await pool.query(insertQuery, values);
+            console.log(`Inserted ${chunk.length} visa combinations`);
+        }
+
+        res.json({ message: "Batch insert successful", total: combinations.length });
+    } catch (error) {
+        console.error("Error inserting visa combinations", error.message);
+        res.status(500).json({ error: "Batch insert failed", details: error.message });
+    }
+});
+
+router.get("/combos", async function (req, res) {
+    try {
+        const combos = await pool.query(
+            'select c1.name as passport, c2.name as destination\n' +
+            'from visa_status v\n' +
+            'join countries c1\n' +
+            'on c1.id = v.passport\n' +
+            'join countries c2\n' +
+            'on c2.id = v.destination;')
+        res.send(combos.rows);
+
+    }
+    catch (error) {
+        res.send(error);
+    }
+})
 module.exports = router;

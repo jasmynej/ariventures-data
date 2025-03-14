@@ -1,11 +1,24 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= title %></title>
+    <title>Ariventures Data</title>
+    <link href="https://api.fontshare.com/v2/css?f[]=general-sans@1,2&display=swap" rel="stylesheet">
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
+    <h1>Ariventures Data</h1>
+    <div class="countries">
+      <% countries.forEach(function(country){ %>
+        <div class="country">
+          <div class="country-img" style="background-image:url(<%= country.flag_img %>)">
+          </div>
+          <div>
+            <h2><%= country.name%> <span id="region"><%= country.region%></span></h2>
+            <p><%= country.capital%></p>
+          </div>
+        </div>
+
+      <% }); %>
+    </div>
   </body>
 </html>

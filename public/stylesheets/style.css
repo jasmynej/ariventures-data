@@ -1,8 +1,30 @@
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font-family: 'General Sans', sans-serif;
 }
 
-a {
-  color: #00B7FF;
+.country {
+  width: 300px;
+}
+.country h2 {
+  font-weight: 400;
+  font-size: 35px;
+}
+
+.countries {
+  display: flex;
+  flex-wrap: wrap;
+  gap:20px;
+}
+
+.country-img{
+  width: 300px;
+  height: 200px;
+  background-size: cover;
+}
+
+#region {
+  font-size: 20px;
+  background-color: red;
+  padding: 5px;
+  border-radius: 10px;
 }

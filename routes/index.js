@@ -1,9 +1,11 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
+const axios = require('axios');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+router.get('/', async function(req, res, next) {
+  const countriesDb = await axios.get("http://localhost:4000/countries");
+  res.render('index', { countries: countriesDb.data });
 });
 
 module.exports = router;

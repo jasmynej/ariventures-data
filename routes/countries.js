@@ -104,13 +104,22 @@ router.post("/load-visa-combinations", async function (req, res) {
 
 router.get("/combos", async function (req, res) {
     try {
-        const combos = await pool.query(
-            'select c1.name as passport, c2.name as destination\n' +
-            'from visa_status v\n' +
-            'join countries c1\n' +
-            'on c1.id = v.passport\n' +
-            'join countries c2\n' +
-            'on c2.id = v.destination;')
+        const regionParams = req.query
+        const region = regionParams.region ? regionParams.region : null;
+        const subregion = regionParams.subRegion ? regionParams.subRegion : null;
+
+
+        const query = `
+                SELECT c1.name AS passport, c2.name AS destination 
+                FROM visa_status v
+                JOIN countries c1 ON c1.id = v.passport
+                JOIN countries c2 ON c2.id = v.destination
+                WHERE c1.sub_region = ANY($1)
+                AND c1.region = ANY($2)
+                LIMIT 300;
+            `;
+
+        const combos = await pool.query(query, [subregion, region])
         res.send(combos.rows);
 
     }

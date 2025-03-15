@@ -61,7 +61,7 @@ async function createVisaStatus(filterCountry = null) {
 
         const { data: country_combo, error } = await query;
         if (error) throw error;
-
+        console.log(country_combo.length);
         if (!country_combo.length) {
             console.log("✅ All visa statuses are updated! Stopping the loop.");
             clearInterval(intervalId);
@@ -141,4 +141,27 @@ router.post("/status-for-country", async (req, res) => {
     }
 });
 
+router.get("/status", async (req, res) => {
+    try {
+        const passport = req.query.passport
+        const destination = req.query.destination
+        const {data: visaStatus, error} = await supabase
+            .from("visa_status")
+            .select("" +
+                "id, " +
+                "passport:countries!visa_status_passport_fkey(name), " +
+                "destination:countries!visa_status_destination_fkey(name), " +
+                "status, " +
+                "notes")
+            .eq("passport", passport)
+            .eq("destination", destination)
+
+        if (error || !visaStatus) return res.status(404).json({ error: "Status not found" });
+        res.json(visaStatus);
+
+    }
+    catch (err) {
+        console.error("Error fetching visa status:", err);
+    }
+})
 module.exports = router;

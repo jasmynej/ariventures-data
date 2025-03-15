@@ -2,12 +2,10 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-router.get('/', (req, res) => {
-  res.send("Ariventures Data")
-})
+
 /* GET home page. */
-router.get('/home', async function(req, res, next) {
-  const countriesDb = await axios.get("http://localhost:4000/countries");
+router.get('/', async function(req, res, next) {
+  const countriesDb = await axios.get("https://ariventures-data.vercel.app/countries");
   res.render('index', { countries: countriesDb.data });
 });
 

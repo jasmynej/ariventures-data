@@ -1,15 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const supabase = require('../db');
 
 /* GET users listing. */
 router.get('/', async function(req, res) {
   try {
-    const allUsers = await pool.query('SELECT * FROM users');
-    res.json(allUsers.rows);
-  }
-  catch (error) {
-    console.log(error);
+    const { data, error } = await supabase.from("users").select("*");
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Internal Server Error" });
   }
 
 });

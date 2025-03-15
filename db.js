@@ -1,8 +1,8 @@
-const {Pool} = require("pg");
-require("dotenv").config();
+const { createClient } = require("@supabase/supabase-js");
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
-})
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+);
 
-module.exports = pool;
+module.exports = supabase;

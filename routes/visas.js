@@ -164,4 +164,25 @@ router.get("/status", async (req, res) => {
         console.error("Error fetching visa status:", err);
     }
 })
+
+router.get("/valid-passports", async (req, res) => {
+    try {
+        const { data: visaRecords, error } = await supabase
+            .from("visa_status")
+            .select("passport(name, flag_img)")
+            .not("status", "is", null)
+            .order("passport", { ascending: true });
+
+        const passports = [
+            ...new Map(
+                visaRecords.map((record) => [record.passport.name, { passport: record.passport.name, flag:record.passport.flag_img }])
+            ).values()
+        ];
+
+        res.json(passports)
+    }
+    catch (err) {
+        console.error("Error fetching visa statuses:", err);
+    }
+})
 module.exports = router;

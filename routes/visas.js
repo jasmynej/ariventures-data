@@ -75,8 +75,12 @@ async function createVisaStatus(filterCountry = null) {
         const updates = await Promise.all(
             country_combo.map(async (country) => {
                 const visaStatus = await getVisaStatus(country);
+                let status = visaStatus.status
+                if (status === 'VISA-FREE') {
+                    status = 'VISA_FREE'
+                }
                 return {
-                    status: visaStatus.status,
+                    status: status,
                     notes: visaStatus.notes
                 };
             })

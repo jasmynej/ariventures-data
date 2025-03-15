@@ -10,6 +10,7 @@ const openai = new OpenAI({
 });
 
 let intervalId = null
+let intervalTime = 30000;
 let updateLimit = 10;
 
 const logAIResponseToFile = (response) => {
@@ -62,23 +63,16 @@ async function getVisaStatus(countryCombo) {
     }
 }
 
-async function createVisaStatus() {
+async function createVisaStatus(query) {
     try {
         try {
-            const query = `
-            SELECT c1.name AS passport, c2.name AS destination, v.id as status_id
-            FROM visa_status v
-            JOIN countries c1 ON c1.id = v.passport
-            JOIN countries c2 ON c2.id = v.destination
-            WHERE v.status IS NULL
-            LIMIT 250;
-        `;
+
             const updateQuery = `UPDATE visa_status SET status = $1, notes = $2 WHERE id = $3`;
 
             const combos = await pool.query(query);
             let country_combo = combos.rows;
 
-            if (updateLimit === 0) {
+            if (country_combo.length  === 0) {
 
                 console.log("✅ All visa statuses are updated! Stopping the loop.");
                 clearInterval(intervalId);
@@ -88,7 +82,7 @@ async function createVisaStatus() {
 
             console.log(`Processing ${country_combo.length} visa records...`);
             updateLimit-=1
-            await Promise.all(
+            const statuses = await Promise.all(
                 country_combo.map(async (country) => {
                     const visaStatus = await getVisaStatus(country);
 
@@ -102,10 +96,12 @@ async function createVisaStatus() {
                     console.log(`Updated ${country.passport} -> ${country.destination}: ${visaStatus.status}`);
                 })
             );
+
+            return statuses
         } catch (err) {
             console.error("Error updating visa statuses:", err);
         }
-        return statuses
+
     }
     catch (error) {
         console.error("Failed to create visa status:", error);
@@ -116,8 +112,15 @@ router.post("/get-status", (req, res) => {
     if (intervalId) {
         return res.json({ message: "Already running!" }); // Prevent duplicate intervals
     }
-
-    intervalId = setInterval(createVisaStatus, 30000); // Start updating every 5 sec
+    const query = `
+            SELECT c1.name AS passport, c2.name AS destination, v.id as status_id
+            FROM visa_status v
+            JOIN countries c1 ON c1.id = v.passport
+            JOIN countries c2 ON c2.id = v.destination
+            WHERE v.status IS NULL
+            LIMIT 150;
+        `;
+    intervalId = setInterval(createVisaStatus(query), intervalTime); // Start updating every 5 sec
     res.json({ message: "Visa status update started!" });
 });
 
@@ -132,5 +135,22 @@ router.post("/stop-status-update", (req, res) => {
     }
 });
 
+router.post("/status-for-country", (req, res) => {
+    const country = req.query.country;
+    const query = `
+        SELECT c1.name AS passport, c2.name AS destination, v.id as status_id
+        FROM visa_status v
+        JOIN countries c1 ON c1.id = v.passport
+        JOIN countries c2 ON c2.id = v.destination
+        WHERE v.status IS NULL
+        AND c1.name = '${country}' 
+    `
+
+    intervalId = setInterval(() => createVisaStatus(query), intervalTime); // ✅ Use arrow function to pass reference
+
+    res.json({ message: "Visa status update started!" });
+
+
+})
 
 module.exports = router

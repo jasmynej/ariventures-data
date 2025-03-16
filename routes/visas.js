@@ -37,13 +37,13 @@ async function getVisaStatus(countryCombo) {
     }
 }
 
-async function createVisaStatus(filterCountry = null) {
+async function createVisaStatus(filterCountry = null, limit = 150) {
     try {
         const query = supabase
             .from("visa_status")
             .select("id, passport(name), destination(name)")
             .is("status", null)
-            .limit(150);
+            .limit(limit);
 
         if (filterCountry) query.eq("passport", filterCountry);
 
@@ -110,6 +110,7 @@ router.post("/stop-status-update", (req, res) => {
 router.post("/status-for-country", async (req, res) => {
     try {
         const countryName = req.query.country;
+
         if (!countryName) return res.status(400).json({ error: "Country name is required" });
 
         // ✅ Fetch country ID from Supabase
@@ -132,6 +133,8 @@ router.post("/status-for-country", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+
 
 router.get("/status", async (req, res) => {
     try {
@@ -159,7 +162,7 @@ router.get("/status", async (req, res) => {
 
 router.get("/valid-passports", async (req, res) => {
     try {
-        const { data: visaRecords, error } = await supabase
+        const { data: visaRecords} = await supabase
             .from("visa_status")
             .select("passport(name, flag_img)")
             .not("status", "is", null)
@@ -176,5 +179,63 @@ router.get("/valid-passports", async (req, res) => {
     catch (err) {
         console.error("Error fetching visa statuses:", err);
     }
+})
+
+router.get("/all-status", async (req, res) => {
+    try {
+        const page = req.query.page ? parseInt(req.query.page) : 1; // Default to page 1
+        const pageSize = 100; // Default to 20 per page
+        const includeNulls = req.query.includeNulls === "true";
+
+        let query = supabase
+            .from("visa_status")
+            .select(`
+                id,
+                passport(name, flag_img),
+                destination(name, flag_img),
+                status,
+                notes
+            `)
+            .range((page - 1) * pageSize, page * pageSize - 1);
+        let countQuery = supabase.from("visa_status").select("*", { count: "exact", head: true });
+        if (!includeNulls) {
+            query = query.not("status", "is", null);
+            countQuery = countQuery.not("status", "is", null);
+        }
+
+        const { data: statues, error } = await query;
+        const { count } = await countQuery;
+
+        const totalPages = Math.ceil(count / pageSize);
+
+        res.json({
+            data: statues,
+            totalRecords: count,
+            totalPages: totalPages,
+            currentPage: page,
+            pageSize: pageSize
+        });
+    }
+    catch (err) {
+        console.error("Error fetching visa statuses:", err);
+    }
+})
+
+router.put("/update-status/:id", async (req, res) => {
+    const updatedStatus = req.body
+    const statusId = req.params.id
+
+    const { error: updateError } = await supabase
+        .from("visa_status")
+        .update(updatedStatus)
+        .eq("id", statusId); // ✅ Only update records by `id`
+
+    const {data: newStatus, error} = await supabase
+        .from("visa_status")
+        .select("id, passport(name, flag_img), destination(name, flag_img), status, notes")
+        .eq("id", statusId)
+
+    res.json(newStatus)
+
 })
 module.exports = router;

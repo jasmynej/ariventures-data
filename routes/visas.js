@@ -11,16 +11,6 @@ let intervalId = null;
 let intervalTime = 30000;
 let updateLimit = 10;
 
-const logAIResponseToFile = (response) => {
-    const logFilePath = path.join(process.cwd(), "ai_responses.log");
-    const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] ${JSON.stringify(response, null, 2)}\n\n`;
-
-    fs.appendFile(logFilePath, logMessage, (err) => {
-        if (err) console.error("Failed to write AI response to log file:", err);
-    });
-};
-
 async function getVisaStatus(countryCombo) {
     try {
         const response = await openai.chat.completions.create({
@@ -40,8 +30,6 @@ async function getVisaStatus(countryCombo) {
             temperature: 0,
             max_tokens: 2048
         });
-
-        logAIResponseToFile(response);
         return JSON.parse(response.choices[0].message.content);
     } catch (error) {
         console.error("Error fetching visa status:", error);
@@ -53,7 +41,7 @@ async function createVisaStatus(filterCountry = null) {
     try {
         const query = supabase
             .from("visa_status")
-            .select("id, passport:countries!visa_status_passport_fkey(name), destination:countries!visa_status_destination_fkey(name)")
+            .select("id, passport(name), destination(name)")
             .is("status", null)
             .limit(150);
 
@@ -153,8 +141,8 @@ router.get("/status", async (req, res) => {
             .from("visa_status")
             .select("" +
                 "id, " +
-                "passport:countries!visa_status_passport_fkey(name), " +
-                "destination:countries!visa_status_destination_fkey(name), " +
+                "passport(name), " +
+                "destination(name), " +
                 "status, " +
                 "notes")
             .eq("passport", passport)

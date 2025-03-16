@@ -2,14 +2,11 @@ const express = require("express");
 const router = express.Router();
 const supabase = require("../db");
 const { OpenAI } = require("openai");
-const fs = require("fs");
-const path = require("path");
 
 const openai = new OpenAI({ apiKey: process.env.OPEN_AI_KEY });
 
 let intervalId = null;
 let intervalTime = 30000;
-let updateLimit = 10;
 
 async function getVisaStatus(countryCombo) {
     try {
@@ -47,8 +44,7 @@ async function createVisaStatus(filterCountry = null, limit = 150) {
 
         if (filterCountry) query.eq("passport", filterCountry);
 
-        const { data: country_combo, error } = await query;
-        if (error) throw error;
+        const { data: country_combo} = await query;
         console.log(country_combo.length);
         if (!country_combo.length) {
             console.log("✅ All visa statuses are updated! Stopping the loop.");
@@ -58,7 +54,6 @@ async function createVisaStatus(filterCountry = null, limit = 150) {
         }
 
         console.log(`Processing ${country_combo.length} visa records...`);
-        updateLimit--;
 
         const updates = await Promise.all(
             country_combo.map(async (country) => {
@@ -76,12 +71,12 @@ async function createVisaStatus(filterCountry = null, limit = 150) {
 
         // ✅ Use `update()` instead of `upsert()`
         for (let i = 0; i < country_combo.length; i++) {
-            const { error: updateError } = await supabase
+            const { data: status} = await supabase
                 .from("visa_status")
                 .update(updates[i])
-                .eq("id", country_combo[i].id); // ✅ Only update records by `id`
-
-            if (updateError) throw updateError;
+                .eq("id", country_combo[i].id)
+                .select(); // ✅ Only update records by `id
+            console.log(status)
         }
 
         console.log(`Updated ${updates.length} visa records.`);
@@ -185,7 +180,7 @@ router.get("/all-status", async (req, res) => {
     try {
         const page = req.query.page ? parseInt(req.query.page) : 1; // Default to page 1
         const pageSize = 100; // Default to 20 per page
-        const includeNulls = req.query.includeNulls === "true";
+        const includeNulls = (req.query.includeNulls ? req.query.includeNulls : false) === "true";
 
         let query = supabase
             .from("visa_status")
@@ -203,7 +198,7 @@ router.get("/all-status", async (req, res) => {
             countQuery = countQuery.not("status", "is", null);
         }
 
-        const { data: statues, error } = await query;
+        const { data: statues} = await query;
         const { count } = await countQuery;
 
         const totalPages = Math.ceil(count / pageSize);
@@ -225,15 +220,12 @@ router.put("/update-status/:id", async (req, res) => {
     const updatedStatus = req.body
     const statusId = req.params.id
 
-    const { error: updateError } = await supabase
+    const { data: newStatus} = await supabase
         .from("visa_status")
         .update(updatedStatus)
-        .eq("id", statusId); // ✅ Only update records by `id`
-
-    const {data: newStatus, error} = await supabase
-        .from("visa_status")
-        .select("id, passport(name, flag_img), destination(name, flag_img), status, notes")
         .eq("id", statusId)
+        .select(); // ✅ Only update records by `id`
+
 
     res.json(newStatus)
 

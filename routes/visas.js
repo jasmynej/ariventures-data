@@ -159,13 +159,18 @@ router.get("/valid-passports", async (req, res) => {
     try {
         const { data: visaRecords} = await supabase
             .from("visa_status")
-            .select("passport(name, flag_img)")
+            .select("passport(name, capital,region, sub_region, flag_img)")
             .not("status", "is", null)
             .order("passport", { ascending: true });
 
         const passports = [
             ...new Map(
-                visaRecords.map((record) => [record.passport.name, { passport: record.passport.name, flag:record.passport.flag_img }])
+                visaRecords.map((record) => [record.passport.name,
+                    { name: record.passport.name,
+                        capital: record.passport.capital,
+                        region: record.passport.region,
+                        sub_region: record.passport.sub_region,
+                      flag_img:record.passport.flag_img }])
             ).values()
         ];
 

@@ -157,26 +157,8 @@ router.get("/status", async (req, res) => {
 
 router.get("/valid-passports", async (req, res) => {
     try {
-        const { data: visaRecords} = await supabase
-            .from("visa_status")
-            .select("passport(id, name, capital,region, sub_region, flag_img)")
-            .not("status", "is", null)
-            .order("passport", { ascending: true });
-
-        const passports = [
-            ...new Map(
-                visaRecords.map((record) => [record.passport.name,
-                    {
-                        id: record.passport.id,
-                        name: record.passport.name,
-                        capital: record.passport.capital,
-                        region: record.passport.region,
-                        sub_region: record.passport.sub_region,
-                      flag_img:record.passport.flag_img }])
-            ).values()
-        ];
-
-        res.json(passports)
+        const { data: visaRecords} = await supabase.rpc("get_passport_info_with_status")
+        res.json(visaRecords)
     }
     catch (err) {
         console.error("Error fetching visa statuses:", err);

@@ -128,4 +128,18 @@ router.get("/:id", async (req, res) => {
     }
 })
 
+router.post("/search", async (req, res) => {
+    try {
+        const name = req.body.name
+        console.log(name)
+        const {data, error} = await supabase.from("cities")
+        .select("*")
+            .ilike("name",`%${name}%`)
+        res.json(data)
+    }
+    catch (error) {
+        console.error("Error getting cities:", error);
+    }
+})
+
 module.exports = router;

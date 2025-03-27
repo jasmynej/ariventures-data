@@ -112,4 +112,42 @@ router.get("/combos", async function (req, res) {
         res.status(500).json({ error: error.message });
     }
 });
+
+router.post("/search", async function (req, res) {
+    try {
+        const name = req.body.name;
+        const regions = req.body.regions;
+        const subRegions = req.body.subRegions;
+        let query = supabase.from("countries").select('*');
+
+        if (name) {
+            query = query.ilike("name", `%${name}%`);
+        }
+
+        if (regions?.length > 0) {
+            console.log(regions);
+            const orQuery = regions
+                .map(val => `region.ilike.%${val}%`)
+                .join(',');
+            query = query.or(orQuery);
+        }
+
+        if (subRegions?.length > 0) {
+            console.log(subRegions);
+            const orQuery = subRegions
+                .map(val => `sub_region.ilike.%${val}%`)
+                .join(',');
+            query = query.or(orQuery);
+        }
+
+        const { data, error } = await query;
+
+        res.json(data)
+    }
+    catch (error) {
+        console.error("Error searching countries:", error.message);
+    }
+
+
+})
 module.exports = router;

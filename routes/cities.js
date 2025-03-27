@@ -109,4 +109,23 @@ router.post("/add", async (req, res) => {
     }
 })
 
+router.get("/:id", async (req, res) => {
+    try {
+        const id = req.params.id;
+        const {data, error} = await supabase.from("cities")
+        .select(`
+                id, 
+                name, 
+                state_province, 
+                country:countries(id, name, region, sub_region),
+                images:city_images(url)`)
+            .eq("id", id)
+        res.json(data)
+
+    }
+    catch (error) {
+        console.error("Error getting city:", error);
+    }
+})
+
 module.exports = router;

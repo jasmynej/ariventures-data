@@ -175,7 +175,7 @@ router.get("/all-status", async (req, res) => {
             .from("visa_status")
             .select(`
                 id,
-                passport(name, flag_img),
+                passport(name, flag_img), 
                 destination(name, flag_img),
                 status,
                 notes

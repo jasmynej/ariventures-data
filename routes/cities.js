@@ -75,7 +75,15 @@ router.post("/load-cities", async (req, res) => {
 
 router.get("/all", async (req, res) => {
     try {
-        const {data: allCities, error: err} = await supabase.from("cities").select("*");
+        const {data: allCities, error: err} = await
+            supabase.from("cities")
+                .select(`
+                    id, 
+                    name, 
+                    state_province, 
+                    country:countries(id, name, region, sub_region),
+                    images:city_images(url)
+                `);
         res.json(allCities);
     }
     catch (error) {

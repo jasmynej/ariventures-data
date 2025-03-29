@@ -88,7 +88,12 @@ router.get("/by-country", async (req, res) => {
         const countryId = req.query.country
         console.log(countryId)
         const {data, error} = await supabase.from("cities")
-            .select("*")
+            .select(`
+                id, 
+                name, 
+                state_province, 
+                country:countries(id, name, region, sub_region),
+                images:city_images(url)`)
             .eq("country_id", countryId)
         res.json(data)
 

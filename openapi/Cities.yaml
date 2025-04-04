@@ -1,0 +1,46 @@
+openapi: 3.1.0
+info:
+  title: Cities API
+  description: Cities API
+  version: 1.0.0
+servers:
+  - url: 'https://ariventures-data.vercel.app'
+paths:
+  /cities/all:
+    get:
+      tags:
+        - Cities
+      summary: Get all cities
+      responses:
+        200:
+          description: Array of city json objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/City'
+components:
+  schemas:
+    Image:
+      type: object
+      properties:
+        url:
+          type: string
+    City:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        state_province:
+          type: string
+        country:
+          $ref: './Countries.yaml/#/components/schemas/Country'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+
+  

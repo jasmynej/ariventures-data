@@ -1,0 +1,123 @@
+openapi: 3.1.0
+info:
+  title: Visas API
+  description: Visas API
+  version: 1.0.0
+servers:
+  - url: 'https://ariventures-data.vercel.app'
+  - url: 'http://localhost:4000'
+paths:
+  /update-status/{id}:
+    put:
+      summary: Update specific status
+      tags:
+        - Visas
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the status that needs updating
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdate'
+      responses:
+        200:
+          description: New response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusUpdate'
+  /visas/status:
+    get:
+      summary: Get Visa status for passport and destination
+      description: Get Visa status for passport and destination
+      tags:
+        - Visas
+      parameters:
+        - name: passport
+          in: query
+          description: Country ID of passport
+          required: true
+          schema:
+            type: integer
+            example: 204
+        - name: destination
+          in: query
+          description: Desired destination
+          required: true
+          schema:
+            type: integer
+            example: 134
+      responses:
+        200:
+          description: Visa Status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VisaStatus'
+  /visas/all-status:
+    get:
+      tags:
+        - Visas
+      summary: Get All the Loaded Visa Statuses
+      parameters:
+        - name: page
+          in: query
+          description: Page
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: includeNulls
+          in: query
+          description: Flag on whether or not to include unloaded visa status
+          schema:
+            type: boolean
+            example: false
+      responses:
+        200:
+          description: Array of Visa Statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VisaStatus'
+components:
+  schemas:
+    VisaCountry:
+      type: object
+      properties:
+        name:
+          type: string
+        flag_img:
+          type: string
+    VisaStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+        passport:
+          $ref: '#/components/schemas/VisaCountry'
+        destination:
+          $ref: '#/components/schemas/VisaCountry'
+        status:
+          type: string
+          enum: [VISA_FREE, VISA_REQUIRED, E_VISA]
+        notes:
+          type: string
+    StatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [VISA_FREE, VISA_REQUIRED, E_VISA]
+        notes:
+          type: string

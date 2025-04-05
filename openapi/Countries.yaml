@@ -5,6 +5,7 @@ info:
   version: 1.0.0
 servers:
   - url: https://ariventures-data.vercel.app
+  - url: 'http://localhost:4000'
 paths:
   /countries:
     get:

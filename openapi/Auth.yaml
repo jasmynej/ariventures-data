@@ -1,0 +1,34 @@
+openapi: 3.1.0
+info:
+  title: Ariventures Authentication
+  description: Ariventures Authentication
+  version: 1.0.0
+servers:
+  - url: 'https://ariventures-data.vercel.app'
+  - url: 'http://localhost:4000'
+paths:
+  /users/signup:
+    post:
+      summary: Sign Up user via Supaabse Auth
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: User
+          content:
+            application/json:
+              schema:
+                type: object
+  
+  

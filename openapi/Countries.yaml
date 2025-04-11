@@ -1,0 +1,76 @@
+openapi: 3.1.0
+info:
+  title: Countries
+  description: Countries API for Ariventures
+  version: 1.0.0
+servers:
+  - url: https://ariventures-data.vercel.app
+  - url: 'http://localhost:4000'
+paths:
+  /countries:
+    get:
+      tags:
+        - Country
+      summary: Get all countries
+      responses:
+        200:
+          description: Array of JSON Country objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
+
+  /countries/search:
+    post:
+      tags:
+        - Country
+      summary: Search countries by name and regions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: France
+                regions:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Europe", "Asia"]
+                subRegions:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Western Europe"]
+      responses:
+        200:
+          description: Returns array of country objects that match the query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
+
+components:
+  schemas:
+    Country:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        capital:
+          type: string
+        region:
+          type: string
+        sub_region:
+          type: string
+        flag_img:
+          type: string

@@ -60,4 +60,13 @@ router.put("/update-profile/:profileId", async (req, res) => {
   return res.status(200).json(userProfile);
 })
 
+router.get("/profile/:userId", async (req, res) => {
+  const userId = req.params.userId
+  const {data: userProfile} = await supabase.from('user_profile')
+  .select()
+  .eq("user_id", userId)
+  .single();
+
+  return res.status(200).json(userProfile);
+})
 module.exports = router;

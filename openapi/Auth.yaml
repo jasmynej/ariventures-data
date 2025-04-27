@@ -30,5 +30,17 @@ paths:
             application/json:
               schema:
                 type: object
-  
+  /users/profile/{userId}:
+    get:
+      summary: Get User profile from user supabase UUID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: UUID of user
+          schema:
+            type: string
+      responses:
+        200:
+          description: user profile
   
